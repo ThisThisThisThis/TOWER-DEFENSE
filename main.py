@@ -137,8 +137,9 @@ niveau.afficher(fenetre)
 
 
 def lancer():
-        t = MonThread()
-        t.start()
+        mechant=Mechant(niveau,500)
+        mechant.creation()
+        mechant.deplacement()
         
         
 Button(fenetre,text="LANCER",command=lancer,anchor=S).pack()       
