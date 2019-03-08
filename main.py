@@ -1,13 +1,16 @@
+
 from tkinter import *
 import time
 import threading
 
 
 ########################################################## Classes #####################################################################
+
+
 class Niveau:
         """Classe permettant de créer un niveau"""
         def __init__(self,fichier):
-                self.structure = 0
+                self.liste = 0
                 self.fichier = fichier
         
         def generer(self):
@@ -16,7 +19,7 @@ class Niveau:
                 #On ouvre le fichier
                 with open(self.fichier, "r") as fichier:
                         structure_niveau = []
-                        #On parcourt les lignes du fichier
+                        #On parcourt les lignes du filter                                                                                       
                         for ligne in fichier:
                                 ligne_niveau = []
                                 #On parcourt les sprites (lettres) contenus dans le fichier
@@ -28,7 +31,7 @@ class Niveau:
                                 #On ajoute la ligne à la liste du niveau
                                 structure_niveau.append(ligne_niveau)
                         #On sauvegarde cette structure
-                        self.structure = structure_niveau
+                        self.liste = structure_niveau
                         
         def afficher(self, fenetre):
                 """Méthode permettant d'afficher le niveau en fonction 
@@ -43,7 +46,7 @@ class Niveau:
                 
                 #On parcourt la liste du niveau
                 num_ligne = 0
-                for ligne in self.structure:
+                for ligne in self.liste:
                         #On parcourt les listes de lignes
                         num_case = 0
                         for sprite in ligne:
@@ -58,8 +61,7 @@ class Niveau:
                                 elif sprite == 'a':               #a = Arrivée
                                         canvas.create_image(x, y,anchor = NW,image=self.arrivee)
                                         
-                                elif sprite == 'b':
-                                        canvas.create_image(x, y,anchor = NW,image=self.trol)
+                                
                                         
                                 num_case += 1
                         num_ligne += 1
@@ -67,6 +69,7 @@ class Niveau:
 
 
 class Mechant:
+        
         def __init__(self,niveau,vitesse):
                 self.case_x=0
                 self.case_y=0
@@ -74,62 +77,58 @@ class Mechant:
                 self.y = 0
                 self.niveau= niveau
                 self.vitesse=vitesse
+                self.vie=20
+                
+
+
         def creation(self):
                 self.monstre=PhotoImage(file="images/monstre.gif")
                 self.img_monstre=canvas.create_image(self.case_x,self.case_y,image=self.monstre,anchor=NW)
                
+
         def deplacement(self):
+                droite=0
+                bas=0
                 
-                vie_joueur = 20
-                if self.case_y < 13:
-                        if self.niveau.structure[self.case_y+1][self.case_x] != 'm':
-                                self.case_y += 1
-                                self.y = self.case_y * taille_sprite
-                                canvas.coords(self.img_monstre,self.x,self.y)
-                                canvas.after(self.vitesse,self.deplacement)
-                                
-                
+
                 if self.case_x < 28:
-                        if self.niveau.structure[self.case_y][self.case_x+1] != 'm':
-                                self.case_x += 1
-                                self.x = self.case_x * taille_sprite
-                                canvas.coords(self.img_monstre,self.x,self.y)
-                                canvas.after(self.vitesse,self.deplacement)
-
-                if self.case_x < 28:               
-                        if self.niveau.structure[self.case_y][self.case_x+1] == 'a':
+                        if niveau.liste[self.case_y][self.case_x+1] == 'a':           
                                 canvas.delete(self.img_monstre)
-                                vie_joueur -=1
-                                print(vie_joueur) 
                                 
-                                
-def vague():    
-        mechant=Mechant(niveau,500)
-        mechant.creation()
-        mechant.deplacement()
+                if self.case_y < 13:
+                        if niveau.liste[self.case_y+1][self.case_x] != 'm':
+                                bas=1
 
-class MonThread (threading.Thread):
-    def __init__(self):      # jusqua = donnée supplémentaire
-        threading.Thread.__init__(self)  # ne pas oublier cette ligne
-        # (appel au constructeur de la classe mère)
+                if self.case_x < 28:
+                        if niveau.liste[self.case_y][self.case_x+1] != 'm':
+                                droite=1
 
-        def debut(self):                
-                print("1")
-                while 0<3:
-                        vague()
-                        time.sleep(2)
-                        a+=1
-                        
+                if bas==1:
+                        self.case_y += 1
+                        self.y = self.case_y * taille_sprite
+                        canvas.coords(self.img_monstre,self.x,self.y)
+                        canvas.after(self.vitesse,self.deplacement)
 
+                
+                if droite==1:
+                        self.vie-=1
+                        self.case_x += 1
+                        self.x = self.case_x * taille_sprite
+                        canvas.coords(self.img_monstre,self.x,self.y)
+                        canvas.after(self.vitesse,self.deplacement)
+
+                
+        
 ###################################################################################################################
 
 
 fenetre=Tk()
 
-taille_sprite=50
+
 canvas = Canvas(fenetre, width=1500, height=950)
 canvas.pack()
 choix = 'niveaux1'
+taille_sprite=50
 niveau = Niveau(choix)
 niveau.generer()
 niveau.afficher(fenetre)
@@ -137,15 +136,13 @@ niveau.afficher(fenetre)
 
 
 def lancer():
-        mechant=Mechant(niveau,500)
+        mechant=Mechant(niveau,400)
         mechant.creation()
         mechant.deplacement()
-        
         
 Button(fenetre,text="LANCER",command=lancer,anchor=S).pack()       
 
 
 
 
-fenetre.mainloop()    
-
+fenetre.mainloop() 
