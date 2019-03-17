@@ -1,7 +1,6 @@
-
 from tkinter import *
 import time
-
+from math import*
 
 
 
@@ -37,9 +36,11 @@ class Niveau:
         def afficher(self, fenetre):
                 """Méthode permettant d'afficher le niveau en fonction 
                 de la liste de structure renvoyée par generer()"""
-                self.fond= PhotoImage(file="images/fond.gif")
+                self.fond=PhotoImage(file="images/fond.gif")
                 canvas.create_image(0,0, anchor = NW, image=self.fond)
-                
+                self.fond_menu=PhotoImage(file="images/fond_menu.gif")
+                canvas.create_image(0,780,anchor = NW, image=self.fond_menu)
+
                 self.mur = PhotoImage(file="images/mur.gif")
                 self.depart = PhotoImage(file="images/depart.gif")
                 self.arrivee = PhotoImage(file="images/arrivee.gif")
@@ -70,28 +71,31 @@ class Niveau:
 
 
 class Mechant:
-        def __init__(self,niveau,vitesse):
+        def __init__(self,niveau,vitesse,vie):
                 self.case_x=0
                 self.case_y=0
-                self.x = 0
+                self.x = 60
                 self.y = 0
                 self.niveau=niveau
                 self.vitesse=vitesse
                 self.vie=20
+                self.vie_monstre=vie
+
+        def creation(self):
                 self.monstre=PhotoImage(file="images/monstre.gif")
                 self.img_monstre=canvas.create_image(self.case_x,self.case_y,image=self.monstre,anchor=NW)
-               
-
+                
         def deplacement(self):
                 droite=0
                 bas=0
-                if self.case_x < 24:
+                [self.xminM,self.yminM,self.xmaxM,self.ymaxM]=canvas.bbox(self.img_monstre)
+                if self.case_x < spriteX_max-1:
                         if niveau.liste[self.case_y][self.case_x+1] == 'a':           
                                 canvas.delete(self.img_monstre)
-                if self.case_y < 10:
+                if self.case_y < spriteY_max:
                         if niveau.liste[self.case_y+1][self.case_x] != 'm':
                                 bas=1
-                if self.case_x < 24:
+                if self.case_x < spriteX_max-1:
                         if niveau.liste[self.case_y][self.case_x+1] != 'm':
                                 droite=1
 
@@ -107,18 +111,29 @@ class Mechant:
                         canvas.coords(self.img_monstre,self.x,self.y)
                         canvas.after(self.vitesse,self.deplacement)
 
+                #if len(canvas.find_overlapping(self.xminM,self.yminM,self.xmaxM,self.ymaxM))>:
+                        #self.vie_monstre-=1
+                        #print("1")
+                #print(len(canvas.find_overlapping(self.xminM,self.yminM,self.xmaxM,self.ymaxM)))
+                if self.vie_monstre==0:
+                        canvas.delete(self.img_monstre)
+        
+                
+
+
+
 class Tour:
-        def __init__(self,niveau,xdepart,ydepart):
+        def __init__(self,niveau,mechant,xdepart,ydepart):
                 self.xdepart=xdepart
                 self.ydepart=ydepart
                 self.niveau=niveau
-                self.tour_image1= PhotoImage(file="images/tour1.gif")
-                self.cercleVT1_image=PhotoImage(file="images/cercle_vertT1.gif")
-                self.cercleRT1_image=PhotoImage(file="images/cercle_rougeT1.gif")
+                self.mechant=mechant
+                self.tour1_menu_image= PhotoImage(file="images/tour1_menu.gif")
+                self.tour1_image=PhotoImage(file="images/tour1.gif")
+                self.tour1_menu=canvas.create_image(xdepart,ydepart,anchor=NW,image=self.tour1_menu_image)
+                self.list_tour=[]
 
-                self.tour1_menu=canvas.create_image(xdepart,ydepart,anchor=NW,image=self.tour_image1)
-                
-
+                self.mechant=mechant
         def clic(self,event):
                 """ Gestion de l'événement Clic gauche """
                 global DETECTION_CLIC_SUR_OBJET
@@ -131,12 +146,8 @@ class Tour:
                 
                 if xmin<=X<=xmax and ymin<=Y<=ymax:
                         DETECTION_CLIC_SUR_OBJET = True
-                        
-                        self.cercle_vertT1=canvas.create_image(self.xdepart-90,self.ydepart-60,anchor=NW,image=self.cercleVT1_image)
-                        self.tour1=canvas.create_image(self.xdepart,self.ydepart,anchor=NW,image=self.tour_image1)
-
-                        
-                        [self.xminT,self.yminT,self.xmaxT,self.ymaxT]= canvas.bbox(self.tour1)
+                        self.cercleT1=canvas.create_oval(X-centre_cercleT1,Y-centre_cercleT1,X+centre_cercleT1,Y+centre_cercleT1)
+                        self.tour1=canvas.create_image(X-centreTour1,Y-centreTour1,anchor=NW,image=self.tour1_image)
 
                 else:
                         DETECTION_CLIC_SUR_OBJET = False
@@ -150,60 +161,139 @@ class Tour:
                 
                 if DETECTION_CLIC_SUR_OBJET == True:
                         # limite de l'objet dans la zone graphique
-                        if X<0:X=0
-                        if X>largeur: X=largeur-(self.xmaxT-self.xdepart)
-                        if Y<0: Y=0
-                        if Y>hauteur: Y=hauteur-(self.ymaxT-self.ydepart)
+                        if X<centreTour1:X=centreTour1
+                        if X>largeur-centreTour1: X=largeur-centreTour1
+                        if Y<centreTour1: Y=centreTour1
+                        if Y>hauteur-centreTour1: Y=hauteur-centreTour1
                         # mise à jour de la position de l'objet (drag)
-                        canvas.coords(self.tour1,X-28,Y-40)
-                        canvas.coords(self.cercle_vertT1,X-118,Y-100)
-                        canvas
-                        [self.xminTF,self.yminTF,self.xmaxTF,self.ymaxTF]= canvas.bbox(self.tour1)
-
-                               
+                        canvas.coords(self.tour1,X-centreTour1,Y-centreTour1)
+                        canvas.coords(self.cercleT1,X-centre_cercleT1,Y-centre_cercleT1,X+centre_cercleT1,Y+centre_cercleT1)
+                        
 
 
+        def case(self,event):
+                X=event.x
+                Y=event.y
 
+                caseX= X/taille_sprite
+                caseY= Y/taille_sprite
+
+                self.caseX_Arrondi=floor(caseX)# arrondi en dessous
+                self.caseY_Arrondi=floor(caseY)# arrondi en dessous
+
+                if self.caseX_Arrondi>spriteX_max:
+                        self.caseX_Arrondi=spriteX_max # variable pour ne pas depasser l'ecran
+                if self.caseX_Arrondi<0:
+                        self.caseX_Arrondi=0
+                if self.caseY_Arrondi>spriteY_max:
+                        self.caseY_Arrondi=spriteY_max # variabale pour ne pas depasser l'ecran
+                
+                
         def test(self,event):
-                if  self.yminTF>(12*taille_sprite-81):
-                       canvas.delete(self.tour1) 
-                       canvas.delete(self.cercle_vertT1)
-                else:
-                        canvas.delete(self.cercle_vertT1)
+                X=event.x
+                Y=event.y
+
+                if DETECTION_CLIC_SUR_OBJET == True:
+                        if  Y>=(spriteY_max*taille_sprite):
+                                canvas.delete(self.tour1) 
+                                canvas.delete(self.cercleT1)
+                                
+                        if niveau.liste[self.caseY_Arrondi][self.caseX_Arrondi]=="0" or niveau.liste[self.caseY_Arrondi][self.caseX_Arrondi]=="d" or niveau.liste[self.caseY_Arrondi][self.caseX_Arrondi]=="a":
+                                canvas.delete(self.tour1) 
+                                canvas.delete(self.cercleT1)
+                                
+                        if [self.caseX_Arrondi,self.caseY_Arrondi] in self.list_tour:
+                                canvas.delete(self.tour1) 
+                                canvas.delete(self.cercleT1)
+                                     
+                        else:
+                                canvas.coords(self.tour1,self.caseX_Arrondi*taille_sprite,self.caseY_Arrondi*taille_sprite)
+                                canvas.delete(self.cercleT1)
+
+                                self.xminHitboxT1=((self.caseX_Arrondi*taille_sprite)+centreTour1)-centre_cercleT1
+                                self.yminHitboxT1=((self.caseY_Arrondi*taille_sprite)+centreTour1)-centre_cercleT1
+                                self.xmaxHitboxT1=((self.caseX_Arrondi*taille_sprite)+centreTour1)+centre_cercleT1
+                                self.ymaxHitboxT1=((self.caseY_Arrondi*taille_sprite)+centreTour1)+centre_cercleT1
+
+
+                                self.hitboxT1=canvas.create_oval(self.xminHitboxT1,self.yminHitboxT1,self.xmaxHitboxT1,self.ymaxHitboxT1,state='hidden')#Creation de la hitbox
+                                
+                                
+
+        def liste(self,event):
+                self.list_case=[self.caseX_Arrondi,self.caseY_Arrondi]
+                self.list_tour.append(self.list_case)
+                
+
+        def degats(self):
+                if len(canvas.find_overlapping(canvas.coords(mechant.creation.img_monstre)[0],canvas.coords(mechant.creation.img_monstre)[1],
+                                               canvas.coords(mechant.creation.img_monstre)[2],canvas.coords(mechant.creation.img_monstre)[3]))>1:
+                        mechant.vie_monstre-=1
+                        print("1")
                 
 
 
-###################################################################################################################
 
+
+def vague():
+        global a,Nb_ennemi
+        if a<Nb_ennemi:
+                mechant=Mechant(niveau,400,3)
+                mechant.creation()
+                mechant.deplacement()              
+                a+=1
+                print("1")
+                canvas.after(1000,vague)
+
+                
+def drag(event):
+        tour.drag(event)
+        tour.case(event)                               
+
+def relacher(event):
+        tour.test(event)
+        tour.liste(event)
+        
+
+
+################################################ Variables #########################################################
+
+choix = 'niveaux1'
+taille_sprite=60
+spriteX_max=24
+spriteY_max=13
+centreTour1=30
+tailleCercle1=170
+largeur=1500
+hauteur=960
+DETECTION_CLIC_SUR_OBJET = False
+centre_cercleT1=100
+Nb_ennemi=10
+a=0
+############################################## Principal ##########################################################
 
 fenetre=Tk()
-largeur=1500
-hauteur=950
 
 canvas = Canvas(fenetre, width=largeur, height=hauteur)
 canvas.pack()
-choix = 'niveaux1'
-taille_sprite=60
+fenetre.attributes('-fullscreen', 1)
 
 niveau = Niveau(choix)
 niveau.generer()
 niveau.afficher(fenetre)
 
-tour= Tour(niveau,100,750)
-DETECTION_CLIC_SUR_OBJET = False
+mechant=Mechant(niveau,0,0)
+tour= Tour(niveau,mechant,80,800)
 
 
 
 canvas.bind('<Button-1>',tour.clic) # évévement clic gauche (press)
-canvas.bind('<B1-Motion>',tour.drag) # événement bouton gauche enfoncé (hold down)
-canvas.bind('<ButtonRelease-1>',tour.test)
+canvas.bind('<B1-Motion>',drag) # événement bouton gauche enfoncé (hold down)
+canvas.bind('<ButtonRelease-1>',relacher)
 
-def lancer():
-        mechant=Mechant(niveau,400)
-        mechant.deplacement()
-        
-Button(fenetre,text="LANCER",command=lancer,anchor=S).pack()       
 
+Button(fenetre,text="LANCER",command=vague,anchor=S).pack()       
+Button(fenetre, text="Quitter", command=fenetre.destroy,anchor=S).pack()
 
 
 
