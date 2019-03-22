@@ -83,13 +83,13 @@ class Mechant:
 
         def creation(self):
                 self.monstre=PhotoImage(file="images/monstre.gif")
-                self.img_monstre=canvas.create_image(self.case_x,self.case_y,image=self.monstre,anchor=NW)
+                self.img_monstre=canvas.create_image(self.case_x,self.case_y,image=self.monstre,anchor=NW,tag="monstre1")
                 
         def deplacement(self):
                 droite=0
                 bas=0
-                [self.xminM,self.yminM,self.xmaxM,self.ymaxM]=canvas.bbox(self.img_monstre)
-                if self.case_x < spriteX_max-1:
+                
+                if self.case_x < spriteX_max:
                         if niveau.liste[self.case_y][self.case_x+1] == 'a':           
                                 canvas.delete(self.img_monstre)
                 if self.case_y < spriteY_max:
@@ -111,13 +111,31 @@ class Mechant:
                         canvas.coords(self.img_monstre,self.x,self.y)
                         canvas.after(self.vitesse,self.deplacement)
 
-                #if len(canvas.find_overlapping(self.xminM,self.yminM,self.xmaxM,self.ymaxM))>:
-                        #self.vie_monstre-=1
-                        #print("1")
-                #print(len(canvas.find_overlapping(self.xminM,self.yminM,self.xmaxM,self.ymaxM)))
-                if self.vie_monstre==0:
-                        canvas.delete(self.img_monstre)
-        
+
+                
+                
+
+        def degats(self):
+                
+                if len(canvas.find_withtag("monstre1"))>0:
+                        
+                        [self.xminM,self.yminM,self.xmaxM,self.ymaxM]=canvas.bbox(self.img_monstre)#Coordonnées de l'ennemi
+                        hitbox=canvas.find_overlapping(self.xminM,self.yminM,self.xmaxM,self.ymaxM)#On regarde quand les coordonnées de l'ennemi entre en collision avec un objet
+                        for iid in hitbox:                                                      
+                                tag=canvas.gettags(iid)#On chercher le tag de notre hitbox('zoneT1')
+                                if tag ==('zoneT1',):
+                                        self.vie_monstre-=1
+                                        
+                                        
+
+                        if self.vie_monstre==0:
+                                canvas.delete(self.img_monstre)
+                        
+                        canvas.after(1000,self.degats)
+                        print("1")
+                #if len(canvas.find_withtag("monstre1"))==0:
+                
+                        
                 
 
 
@@ -132,8 +150,8 @@ class Tour:
                 self.tour1_image=PhotoImage(file="images/tour1.gif")
                 self.tour1_menu=canvas.create_image(xdepart,ydepart,anchor=NW,image=self.tour1_menu_image)
                 self.list_tour=[]
-
                 self.mechant=mechant
+
         def clic(self,event):
                 """ Gestion de l'événement Clic gauche """
                 global DETECTION_CLIC_SUR_OBJET
@@ -206,7 +224,7 @@ class Tour:
                                 canvas.delete(self.tour1) 
                                 canvas.delete(self.cercleT1)
                                      
-                        else:
+                        if niveau.liste[self.caseY_Arrondi][self.caseX_Arrondi]=="m":
                                 canvas.coords(self.tour1,self.caseX_Arrondi*taille_sprite,self.caseY_Arrondi*taille_sprite)
                                 canvas.delete(self.cercleT1)
 
@@ -215,37 +233,45 @@ class Tour:
                                 self.xmaxHitboxT1=((self.caseX_Arrondi*taille_sprite)+centreTour1)+centre_cercleT1
                                 self.ymaxHitboxT1=((self.caseY_Arrondi*taille_sprite)+centreTour1)+centre_cercleT1
 
+                                
+                                self.hitboxT1=canvas.create_oval(self.xminHitboxT1,self.yminHitboxT1,self.xmaxHitboxT1,self.ymaxHitboxT1,width=0,tags="zoneT1")#Creation de la hitbox
+                                
+                                
 
-                                self.hitboxT1=canvas.create_oval(self.xminHitboxT1,self.yminHitboxT1,self.xmaxHitboxT1,self.ymaxHitboxT1,state='hidden')#Creation de la hitbox
-                                
-                                
+
 
         def liste(self,event):
                 self.list_case=[self.caseX_Arrondi,self.caseY_Arrondi]
                 self.list_tour.append(self.list_case)
                 
 
-        def degats(self):
-                if len(canvas.find_overlapping(canvas.coords(mechant.creation.img_monstre)[0],canvas.coords(mechant.creation.img_monstre)[1],
-                                               canvas.coords(mechant.creation.img_monstre)[2],canvas.coords(mechant.creation.img_monstre)[3]))>1:
-                        mechant.vie_monstre-=1
-                        print("1")
+        
                 
 
 
 
 
 def vague():
-        global a,Nb_ennemi
+        global a,Nb_ennemi,scenario
         if a<Nb_ennemi:
-                mechant=Mechant(niveau,400,3)
+                mechant=Mechant(niveau,500,3)
                 mechant.creation()
                 mechant.deplacement()              
                 a+=1
-                print("1")
-                canvas.after(1000,vague)
-
+                canvas.after(500,vague)
+                mechant.degats()
                 
+                
+        if a==Nb_ennemi:
+                scenario+=1
+                
+
+def temporaire():
+                mechant=Mechant(niveau,500,2)
+                mechant.creation()
+                mechant.deplacement()
+                mechant.degats()
+
 def drag(event):
         tour.drag(event)
         tour.case(event)                               
@@ -267,9 +293,12 @@ tailleCercle1=170
 largeur=1500
 hauteur=960
 DETECTION_CLIC_SUR_OBJET = False
-centre_cercleT1=100
-Nb_ennemi=10
+
+centre_cercleT1=150
+Nb_ennemi=2
 a=0
+scenario=0
+
 ############################################## Principal ##########################################################
 
 fenetre=Tk()
@@ -277,6 +306,8 @@ fenetre=Tk()
 canvas = Canvas(fenetre, width=largeur, height=hauteur)
 canvas.pack()
 fenetre.attributes('-fullscreen', 1)
+
+
 
 niveau = Niveau(choix)
 niveau.generer()
@@ -292,7 +323,7 @@ canvas.bind('<B1-Motion>',drag) # événement bouton gauche enfoncé (hold down)
 canvas.bind('<ButtonRelease-1>',relacher)
 
 
-Button(fenetre,text="LANCER",command=vague,anchor=S).pack()       
+Button(fenetre,text="LANCER",command=temporaire,anchor=S).pack()       
 Button(fenetre, text="Quitter", command=fenetre.destroy,anchor=S).pack()
 
 
