@@ -113,12 +113,14 @@ class Mechant:
                         if self.vie_monstre<=0:
                                 canvas.delete(self.monstre)
                                 canvas.delete(self.barre_vie)
+                                mechant.delete(self, mechant)
                                         
 
                         if self.case_x < spriteX_max:
                                 if niveau.liste[self.case_y][self.case_x+1] == 'a':           
                                         canvas.delete(self.monstre)
                                         canvas.delete(self.barre_vie)
+                                        mechant.delete(self, mechant)
 
                         if self.case_y < spriteY_max:
                                 if niveau.liste[self.case_y+1][self.case_x] != 'm':
@@ -205,21 +207,12 @@ class TourBleu:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        
+        
+        
+        
+        
+        
 
 
 class Tour:
