@@ -169,8 +169,7 @@ class Mechant:
                 
         
         def vie(self):
-                print(liste_ennemi)
-                if liste_ennemi[0]:
+                if liste_ennemi[0]==self.monstre:
                         print(self.vie_monstre)
                         self.vie_monstre-=1
                         
